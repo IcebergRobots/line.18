@@ -73,6 +73,7 @@ void setup() {
   
   pinMode(LED_1, OUTPUT);
   pinMode(LED_2, OUTPUT);
+  pinMode(BUZZER, OUTPUT);
   pinMode(LED_BUILTIN, OUTPUT);
   
   debugPrintln("PinModes gesetzt.");        //schreibt Statusmeldung in die Serielle Konsole
@@ -86,12 +87,19 @@ void loop() {
   if(sensorAktiv){
     digitalWrite(LED_BUILTIN, HIGH);
     messen();
+    digitalWrite(BUZZER, linie);
     if(linie){
       interrupt();
+      senden();
     }
   }else{
     ledBlink(LED_BUILTIN, 200);
   }
+}
+
+//sendet die Werte an den Arduino Mega
+void senden(){
+  
 }
 
 //-- Diese Methode gibt die Messwerte zu debugging-Zwecken in der Konsole aus
@@ -99,9 +107,9 @@ void ausgeben(){
 
   //alle Sensoren werden durchgegangen und ausgelesen
   for(int i = 0; i<16; i++){
-    Serial.print(String(messwerte[i])+",");
+    debugPrint(String(messwerte[i])+",");
   }
-  Serial.println();
+  debugPrintln("");
 }
 
 //-- Diese Methode nimmt Messwerte auf
@@ -129,7 +137,7 @@ void messen(){
     
     messwerte[counter] = analogRead(SIG1);
     
-    if(messwerte[counter] < schwellwerte[counter]){
+    if(messwerte[counter] < schwellWerte[counter]){
       aufLinie[counter] = true;
       linie = true;
     }else{
@@ -209,14 +217,14 @@ void kalibrieren(){
 //-- Diese Methode sendet einen Interrupt an den Arduino Mega
 void interrupt(){   
   digitalWrite(INTERRUPT_PIN,HIGH);
-  delay(2);
+  delayMicroseconds(20);
   digitalWrite(INTERRUPT_PIN,LOW);
-  delay(2);
+  delayMicroseconds(20);
 }
 
 //-- Diese Methode ermittelt die Richtung in der die Linie liegt
 byte positionErmitteln(){
-  pos = 255
+  int pos = 255;
   for(int i = 0; i<16; i++){
     
   }
@@ -225,11 +233,7 @@ byte positionErmitteln(){
 
 //-- Lässt eine LED in einer bestimmten Frequenz blinken
 void ledBlink(int pin, int freq){
-  if(millis() % 2*freq > freq){
-    digitalWrite(pin, HIGH);
-  }else{
-    digitalWrite(pin, LOW);
-  }
+  digitalWrite(pin, millis() % 2*freq > freq);
 }
 
 //-- Diese Methode führt ein Serial.print des Textes aus, wenn das Macro DEBUG_MODE auf true gesetzt ist.
