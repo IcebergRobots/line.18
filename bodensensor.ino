@@ -78,7 +78,26 @@ void setup() {
   
   debugPrintln("PinModes gesetzt.");        //schreibt Statusmeldung in die Serielle Konsole
   delay(100);                               //kurze Wartezeit
-  kalibrieren();
+  
+  if(!digitalRead(BUTTON)){               //Wenn der Button 1 gedrückt wird, können die Werte neu kalibriert werden
+    while(!digitalRead(BUTTON)){}         //es wird gewartet, bis der Button losgelassen wird
+    kalibrieren();                          //ruft die Methode auf, die die Sensoren kalibriert
+  }else{
+    Serial.println("WERTE AUS EEPROM");     //Gibt die aktuellen kalibrierten Werte in der Konsole aus
+    Serial.println("================");
+    for(int i = 0; i<16; i++){
+      schwellWerte[i] = EEPROM.read(i)*4;     //Liest den Wert aus dem EEPROM an Stelle (Byte) nr. i
+      Serial.print("Sensor Nr. ");
+      Serial.print(i);
+      Serial.print(" -> Schwellw. ");
+      Serial.print(schwellWerte[i]*4);
+      defekteSensoren[i] = (schwellWerte[i] == 0); //Es wird ausgelesen, ob der Sensor defekt ist
+      if(defekteSensoren[i]){
+        Serial.print(" DEFEKT!");
+      }
+      Serial.println();
+    }
+  }
 }
 
 //-- in der Loop-Methode wird durchgehend geprüft, ob sich der Roboter auf einer Linie befindet. In diesem Fall wird dem Arduino Mega ein Interrupt gesendet, gefolgt von der Richtung der Linie
@@ -151,10 +170,10 @@ void messen(){
 void kalibrieren(){
   Serial.println("Warte auf Button1 zum Kalibrieren der Feldhelligkeit.");
   while(digitalRead(BUTTON)){
-    ledBlink(LED_1, 100);
+    ledBlink(LED_BUILTIN, 100);
   }
   messen();
-  for(int i = 0; i < 32; i++){
+  for(int i = 0; i < 16; i++){
     feldWerte[i] = messwerte[i];
     defekteSensoren[i] = false;
     aufLinie[i] = false;
@@ -166,11 +185,11 @@ void kalibrieren(){
   Serial.println("Warte auf Button1 zum Kalibrieren der Linienhelligkeit.");
   
   while(digitalRead(BUTTON)){
-    ledBlink(LED_1, 500);
+    ledBlink(LED_BUILTIN, 500);
   }
   
   messen();
-  for(int i = 0; i < 32; i++){
+  for(int i = 0; i < 16; i++){
     linienWerte[i] = messwerte[i];
   }
   Serial.println("Linienwerte Kalibriert.");
@@ -178,12 +197,12 @@ void kalibrieren(){
   delay(1000);
 
   Serial.println("Schwellwerte werden ausgerechnet...");
-  for(int i = 0; i< 32; i++){
-    schwellWerte[i] = (2*linienWerte[i]+feldWerte[i])/3;  //Schwellwerte werden berechnet
-    if(schwellWerte[i]>255){
+  for(int i = 0; i< 16; i++){
+    schwellWerte[i] = (linienWerte[i]+2*feldWerte[i])/3;  //Schwellwerte werden berechnet
+    if(schwellWerte[i]/4>255){
       EEPROM.write(i, 255);  //Werte werden m EEPROM gespeichert
     }else{
-      EEPROM.write(i, schwellWerte[i]);  //Werte werden m EEPROM gespeichert
+      EEPROM.write(i, schwellWerte[i]/4);  //Werte werden m EEPROM gespeichert
     }
     delayMicroseconds(5);
   }
@@ -193,7 +212,7 @@ void kalibrieren(){
   Serial.println("");
   Serial.println("Sensor:x (Feld/Linie)");
 
-  for (int i = 0; i< 32; i++){
+  for (int i = 0; i< 16; i++){
     Serial.print("Sensor: ");
     Serial.print(i);
     Serial.print(" (");
