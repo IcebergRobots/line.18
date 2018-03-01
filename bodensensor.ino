@@ -32,23 +32,23 @@ bool defekteSensoren[16];           //hier wird gespeichert, welche Sensoren als
 
 bool sensorAktiv = true;            //dieses Boolean gibt an, ob die Sensoren ausgelesen werden sollen
 bool linie = false;                 //gibt an, ob eine Linie erkannt wurde
-int positionLinie = -1;             //hier wird die Position der Linie gespeichert (die Nummer des Sensors, in wessen Richtung die Linie liegt)
-byte sektor[] = {0,0,0,0};
+int positionLinie = -1;             //hier wird die Position der Linie gespeichert (die Nummer des Sensors, in wessen Richtung die Linie liegt) 
+byte sektor[] = {0,0,0,0};          //Anzahl der ausgeschlagenen Sensoren pro Sektor {rechts, vorne, links, hinten}
 
 /*  Speicherbelegung EEPROM
  *  ByteNr   ->  Variabel
- *  0 -> schwellWerte[0]
- *  1 -> schwellWerte[1]
- *  2 -> schwellWerte[2]
- *  3 -> schwellWerte[3]
+ *  0 -> schwellWerte[0]/4
+ *  1 -> schwellWerte[1]/4
+ *  2 -> schwellWerte[2]/4
+ *  3 -> schwellWerte[3]/4
  * .. -> ...
- * 28 -> schwellWerte[28]
- * 29 -> schwellWerte[29]
- * 30 -> schwellWerte[30]
- * 31 -> schwellWerte[31]
- * 32 
- * 33
- * 34
+ * 12 -> schwellWerte[12]/4
+ * 13 -> schwellWerte[13]/4
+ * 14 -> schwellWerte[14]/4
+ * 15 -> schwellWerte[15]/4
+ * 16 
+ * 17
+ * 18
  * 
  * 
  */
@@ -105,14 +105,29 @@ void loop() {
   sensorAktiv = digitalRead(SWITCH);
   if(sensorAktiv){
     digitalWrite(LED_BUILTIN, HIGH);
+    digitalWrite(LED_1, LOW);
+    digitalWrite(LED_2, LOW);
     messen();
-    digitalWrite(BUZZER, linie);
     if(linie){
       interrupt();
       senden();
-    }
+      //digitalWrite(BUZZER, HIGH);
+      delay(20);
+      digitalWrite(BUZZER, LOW);
+      //delay(100);
+      for(int i = 0; i<16; i++){
+        if(aufLinie[i]){
+          debugPrint(i);
+          debugPrint("|");
+        }
+        
+      }
+      debugPrintln("");
+    } 
   }else{
-    ledBlink(LED_BUILTIN, 200);
+    ledBlink(LED_BUILTIN, 500);
+    ledBlink(LED_1, 210);
+    ledBlink(LED_2, 200);
   }
 }
 
@@ -136,6 +151,11 @@ void messen(){
   int state;        //ein Integer in dem der Zusatng eines Pins gespeichert wird (HIGH/LOW)
   linie = false;
   
+  sektor[0] = 0;
+  sektor[1] = 0;
+  sektor[2] = 0;
+  sektor[3] = 0;
+  
   for(int counter = 0; counter < 16; counter++){ //Der counter zaehlt die Eingabezahl für den analogen Multiplexer 
     String binNumber = String(counter, BIN);     //counter wird in Binaer umgewandelt
     byte binLength = binNumber.length();         
@@ -152,13 +172,25 @@ void messen(){
       digitalWrite(dPins[i], state);
     }
 
-    delayMicroseconds(20);
+    delay(2);
     
     messwerte[counter] = analogRead(SIG1);
     
     if(messwerte[counter] < schwellWerte[counter]){
       aufLinie[counter] = true;
       linie = true;
+      if(counter <= 2 || counter >= 14){
+        sektor[1]++;
+      }
+      if(counter <= 6 && counter >= 2){
+        sektor[0]++;
+      }
+      if(counter <= 10 && counter >= 6){
+        sektor[3]++;
+      }
+      if(counter <= 14 && counter >= 10){
+        sektor[2]++;
+      }
     }else{
       aufLinie[counter] = false;
     }
@@ -243,16 +275,21 @@ void interrupt(){
 
 //-- Diese Methode ermittelt die Richtung in der die Linie liegt
 byte positionErmitteln(){
-  int pos = 255;
-  for(int i = 0; i<16; i++){
-    
+  byte lineSektor = 255;
+  byte maxAnzahl = 0;
+  
+  for(int i = 0; i<4; i++){
+    if(sektor[i]>maxAnzahl){
+      maxAnzahl = sektor[i];
+      lineSektor = i;
+    }
   }
-  return pos;
+  return lineSektor;
 }
 
 //-- Lässt eine LED in einer bestimmten Frequenz blinken
 void ledBlink(int pin, int freq){
-  digitalWrite(pin, millis() % 2*freq > freq);
+  digitalWrite(pin, millis() % (2*freq) > freq);
 }
 
 //-- Diese Methode führt ein Serial.print des Textes aus, wenn das Macro DEBUG_MODE auf true gesetzt ist.
@@ -282,3 +319,4 @@ void debugPrintln(int text){
     Serial.println(text);
   }
 }
+
