@@ -4,10 +4,10 @@
 #define DEBUG_MODE true  //wenn true -> es werden Statusmeldungen in der Konsole angezeigt
 
 //Über diese 4 digitalen Pins werden die Sensoren am analogen Multiplexer angesteuert, welche ausgelesen werden sollen (indem eine Binärnummer in die vier Pins geschrieben wird)
-#define D0 4        //Digitaler Multiplexerpin NR.0
-#define D1 10        //Digitaler Multiplexerpin NR.1
-#define D2 11        //Digitaler Multiplexerpin NR.2
-#define D3 12        //Digitaler Multiplexerpin NR.3
+#define D3 4        //Digitaler Multiplexerpin NR.0
+#define D2 10        //Digitaler Multiplexerpin NR.1
+#define D1 11        //Digitaler Multiplexerpin NR.2
+#define D0 12        //Digitaler Multiplexerpin NR.3
 
 #define SIG1 A6     //Pin, an dem der OUTPUT vom analogen Multiplexer liegt
 
@@ -109,20 +109,8 @@ void loop() {
     digitalWrite(LED_2, LOW);
     messen();
     if(linie){
-      interrupt();
       senden();
-      //digitalWrite(BUZZER, HIGH);
-      delay(20);
-      digitalWrite(BUZZER, LOW);
-      //delay(100);
-      for(int i = 0; i<16; i++){
-        if(aufLinie[i]){
-          debugPrint(i);
-          debugPrint("|");
-        }
-        
-      }
-      debugPrintln("");
+      interrupt();
     } 
   }else{
     ledBlink(LED_BUILTIN, 500);
@@ -133,7 +121,7 @@ void loop() {
 
 //sendet die Werte an den Arduino Mega
 void senden(){
-  
+  Serial.write(positionErmitteln());
 }
 
 //-- Diese Methode gibt die Messwerte zu debugging-Zwecken in der Konsole aus
@@ -183,13 +171,13 @@ void messen(){
         sektor[1]++;
       }
       if(counter <= 6 && counter >= 2){
-        sektor[0]++;
+        sektor[2]++;
       }
       if(counter <= 10 && counter >= 6){
         sektor[3]++;
       }
       if(counter <= 14 && counter >= 10){
-        sektor[2]++;
+        sektor[0]++;
       }
     }else{
       aufLinie[counter] = false;
