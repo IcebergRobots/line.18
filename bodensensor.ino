@@ -108,9 +108,16 @@ void loop() {
     digitalWrite(LED_1, LOW);
     digitalWrite(LED_2, LOW);
     messen();
+    //digitalWrite(BUZZER, linie);
     if(linie){
-      senden();
-      interrupt();
+      //senden();
+      //interrupt();
+      for(int i = 0; i<4; i++){
+        Serial.print(sektor[i]);
+        Serial.print("; ");
+      }
+      Serial.print(" -> ");
+      Serial.println(positionErmitteln());
     } 
   }else{
     ledBlink(LED_BUILTIN, 500);
@@ -265,6 +272,44 @@ void interrupt(){
 byte positionErmitteln(){
   byte lineSektor = 255;
   byte maxAnzahl = 0;
+  byte anzahlSektoren = 0;
+  
+  for(int i = 0; i<4; i++){
+    if(sektor[i] != 0){
+      lineSektor = i;
+      anzahlSektoren++;
+    }
+  }
+  
+  switch (anzahlSektoren){
+    case 0:
+      return 255;
+      break;
+    case 1:
+      return lineSektor*2;
+      break;
+    case 2:
+      for(int i = 0; i<4; i++){
+        if(sektor[i] != 0){
+          if(sektor[(i+1)%4] != 0){
+            return ((i*2)+1)%8;
+          }else{
+            return 255;
+          }
+        }
+      }
+      break;
+    case 3:
+      for(int i = 0; i<4; i++){
+        if(sektor[i]==0){
+          return ((i*2)+4)%8;
+        }
+      }
+      break;
+    case 4:
+      return 255;
+      break;
+  }
   
   for(int i = 0; i<4; i++){
     if(sektor[i]>maxAnzahl){
