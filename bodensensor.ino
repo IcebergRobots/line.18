@@ -108,16 +108,10 @@ void loop() {
     digitalWrite(LED_1, LOW);
     digitalWrite(LED_2, LOW);
     messen();
-    //digitalWrite(BUZZER, linie);
+    digitalWrite(BUZZER, linie);
     if(linie){
-      //senden();
-      //interrupt();
-      for(int i = 0; i<4; i++){
-        Serial.print(sektor[i]);
-        Serial.print("; ");
-      }
-      Serial.print(" -> ");
-      Serial.println(positionErmitteln());
+      senden();
+      interrupt();
     } 
   }else{
     ledBlink(LED_BUILTIN, 500);
