@@ -16,7 +16,7 @@
 
 #define BUTTON 6  //Pin, an dem der Button1 auf der Platine liegt
 #define SWITCH 5
-#define BUZZER 9
+#define BUZZER 47
 
 #define INTERRUPT_PIN 2
 
