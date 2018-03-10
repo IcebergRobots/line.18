@@ -111,6 +111,7 @@ void loop() {
     if(linie){
       senden();
       interrupt();
+      delay(20);
     } 
   }else{
     ledBlink(LED_BUILTIN, 500);
@@ -160,7 +161,8 @@ void messen(){
       digitalWrite(dPins[i], state);
     }
 
-    delay(2);
+    delayMicroseconds(20);
+
     
     messwerte[counter] = analogRead(SIG1);
     
