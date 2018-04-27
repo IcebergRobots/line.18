@@ -122,7 +122,7 @@ void loop() {
 
 //sendet die Werte an den Arduino Mega
 void senden() {
-  Serial.println(positionErmitteln());
+  Serial.write(positionErmitteln());
 }
 
 //-- Diese Methode gibt die Messwerte zu debugging-Zwecken in der Konsole aus
@@ -282,11 +282,11 @@ byte positionErmitteln() {
     gegenueber -= 16;
   }
 
-  /*if (standardabweichung(output) < standardabweichung(gegenueber)) {*/
+  if (standardabweichung(output) < standardabweichung(gegenueber)) {
     return output;
- /*} else {
+  } else {
     return gegenueber;
-  }*/
+  }
 
   /*for (int i = 0; i < 4; i++) {
     if (sektor[i] > maxAnzahl) {
@@ -296,7 +296,7 @@ byte positionErmitteln() {
     }
     return lineSektor;*/
 }
-/*
+
 byte standardabweichung(byte wert) {
   byte abweichung = 0;
   byte maxAnzahl = 0;
@@ -304,14 +304,18 @@ byte standardabweichung(byte wert) {
 
   for (int i = 0; i < 16; i++) {
     if (aufLinie[i]) {
-      output += abs(wert - i);
+      if (abs(wert - i) > 8) {
+        output += 16 - abs(wert - i);
+      } else {
+        output += abs(wert - i);
+      }
       maxAnzahl++;
     }
   }
   output /= max(1, maxAnzahl);
   return output;
 }
-*/
+
 //-- Lässt eine LED in einer bestimmten Frequenz blinken
 void ledBlink(int pin, int freq) {
   digitalWrite(pin, millis() % (2 * freq) > freq);
